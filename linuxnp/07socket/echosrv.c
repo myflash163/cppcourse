@@ -1,15 +1,25 @@
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
-#define ERR_EXIT(m) \
-	do \
-	{\
-		perror(m);
-		exit(EXIT_FAILURE);\
-	}while(0)
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
+#define ERR_EXIT(m)         \
+	do                      \
+	{                       \
+		perror(m);          \
+		exit(EXIT_FAILURE); \
+	} while (0)
 
 int main(void)
 {
 	int listenfd;
-	if(listenfd = socket(PF_INET,SOCK_STREAM, IPPROTO_TCP)) < 0)
+	if (listenfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 	/*if(listenfd = socket(PF_INET,SOCK_STREAM, 0)) < 0)*/
 		ERR_EXIT("socket");
 	struct sockaddr_in servaddr;
@@ -19,12 +29,27 @@ int main(void)
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	/*servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");*/
 	/*inet_aton("127.0.0.1",&servaddr.sin_addr);*/
-	if(bind(listendfd,(struct socketaddr*)&servaddr,sizeof(servaddr)) <0)
+	if (bind(listendfd, (struct socketaddr *)&servaddr, sizeof(servaddr)) < 0)
 		ERR_EXIT("bind");
-	if(listen(listedfd, SOMAXCONN) < 0)
+	if (listen(listedfd, SOMAXCONN) < 0)
 		ERR_EXIT("listen");
 	struct sockadd_in peeraddr;
 	socklen_t peerlen = sizeof(peeraddr);
-	if(accept(listenfd,(struct sockaddr *)&peeraddr, &peerlen) < 0)
+	int conn;
+	if ((conn = accept(listenfd, (struct sockaddr *)&peeraddr, &peerlen)) < 0)
 		ERR_EXIT("accept");
+
+	char recvbuf[1024];
+	while (1)
+	{
+		memset(recvbuf, 0, sizeof(recvbuf));
+		read(conn, recvbuf, sizeof(recvbuf));
+		fputs(recvbuf, stdout);
+		write(conn, recvbuf, strlen(recvbuf));
+	}
+
+	close(conn);
+	close(listen);
+	
+	return 0;
 }
