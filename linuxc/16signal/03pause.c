@@ -3,6 +3,9 @@
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 
 #define ERR_EXIT(m)         \
     do                      \
@@ -12,29 +15,26 @@
     } while (0)
 
 void handler(int sig);
-/**
- * kill -l 查看所有信号
- * SIGINT(ctrl+c)
- * SIGQUIT(ctrl+\)
- * 函数原型 __sighandler_t signal(int __sig, __sighandler_t __handler)
- */
+/*
+ * pause 将进程置为可中断睡眠状态。然后它调用schedule(),使linux进程调度器找到另一个进程来运行
+ * pause 使调用者进程挂起，直到一个信号被捕获
+ */ 
 int main(int argc,char *argv[])
 {
-    __sighandler_t oldhandler;
-    oldhandler =signal(SIGINT,handler);
-    if(oldhandler == SIG_ERR)
+    if(signal(SIGINT,handler) == SIG_ERR)
         ERR_EXIT("signal error");
 
-    while(getchar() != '\n'){}
-     //关联信号默认操作
-    if(signal(SIGINT,SIG_DFL) == SIG_ERR)
-         ERR_EXIT("signal error");
+   for(;;)
+   {
+       pause();
+       printf("pause return\n");
+   }
 
-    for(;;);
     return 0;
 }
 
 void handler(int sig)
 {
     printf("recv a sig= %d\n",sig);
+    sleep(1);
 }

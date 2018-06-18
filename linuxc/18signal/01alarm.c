@@ -3,6 +3,9 @@
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 
 #define ERR_EXIT(m)         \
     do                      \
@@ -12,29 +15,30 @@
     } while (0)
 
 void handler(int sig);
-/**
- * kill -l 查看所有信号
- * SIGINT(ctrl+c)
- * SIGQUIT(ctrl+\)
- * 函数原型 __sighandler_t signal(int __sig, __sighandler_t __handler)
- */
+/*
+ * 更多信号发送函数
+ * alarm SIGALRM
+ * setitimer SIGALRM SIGVTALRLM SIGPROF
+ * abort  SIGABRT
+ */ 
 int main(int argc,char *argv[])
 {
-    __sighandler_t oldhandler;
-    oldhandler =signal(SIGINT,handler);
-    if(oldhandler == SIG_ERR)
+    if(signal(SIGALRM,handler) == SIG_ERR)
         ERR_EXIT("signal error");
 
-    while(getchar() != '\n'){}
-     //关联信号默认操作
-    if(signal(SIGINT,SIG_DFL) == SIG_ERR)
-         ERR_EXIT("signal error");
+    alarm(1);
+    //可以通过 kill -SIGALRM 21656 发送信号
+    //可以通过 kill -ALRM 21656 发送信号
+   for(;;)
+   {
+       pause();
+   }
 
-    for(;;);
     return 0;
 }
 
 void handler(int sig)
 {
     printf("recv a sig= %d\n",sig);
+    alarm(1);//间接递归
 }
